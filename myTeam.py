@@ -17,6 +17,8 @@ import random, time, util
 from game import Directions
 import game
 from game import Actions
+from game import Grid
+from capture import GameState
 
 #################
 # Team creation #
@@ -74,8 +76,22 @@ class DummyAgent(CaptureAgent):
     '''
     CaptureAgent.registerInitialState(self, gameState)
     self.agent_pos = gameState.getAgentPosition(self.index)
-    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(2,14)],avoidPositions=[], returnPosition=False)
+    self.currentPath = None
+    # grid = Grid()
+    # grid = grid.asList()
+    # g_state = [(len(grid)//2, 0)]
+    # i = 0
+    # while gameState.hasWall(g_state[0],g_state[1]) == True:
+    #     g_state = [(len(g_state)//2, i)]
+    #     i+=1
+    
+       
+       
+
+
+    # self.currentPath = self.aStarSearch(self.agent_pos, gameState, g_state,avoidPositions=[], returnPosition=False)
     # print(self.currentPath)
+
 
     '''
     Your initialization code goes here, if you need any.
@@ -99,14 +115,21 @@ class DummyAgent(CaptureAgent):
     
     #return  random.choice(gameState.getLegalActions(self.index))
     ##### _____ WORKING JUST FINE _______#######
+    self.agent_pos = gameState.getAgentPosition(self.index)
+    print(self.agent_pos)
+    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(3,11)],avoidPositions=[], returnPosition=False)
     print(self.currentPath)
     if len(self.currentPath) > 0 :
         action =  self.currentPath.pop(0)
     else:
-        action = 'Stop'
+        # action = 'Stop'
+        action = Directions.STOP
+        # action = random.choice(gameState.getLegalActions(self.index))
+
+
     #print(self.currentPath[0])
-    print(gameState.getAgentPosition(self.index))
     return action
+
   
 
 
