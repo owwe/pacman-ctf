@@ -106,11 +106,12 @@ class DefensiveAgent(CaptureAgent):
     action = Directions.STOP
 
     foodPos = self.DisappearingFoodPos(gameState)
+    #print('food position',foodPos)
     capsPos = self.PowerCapsulePos(gameState)
     # print(f"capsPos {capsPos}")
     # closestFood = self.ClosestFoodPos(gameState)
     if len(foodPos) > 0:
-      # print(foodPos[0])
+      print(foodPos[0])
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [foodPos[0]],avoidPositions=[], returnPosition=False)   
             
     if len(self.currentPath) > 0 and self.currentPath[0] in gameState.getLegalActions(self.index):
@@ -153,7 +154,6 @@ class DefensiveAgent(CaptureAgent):
             best_pos = (i,j)
       if found:
          break
-      
     return best_pos 
 
 

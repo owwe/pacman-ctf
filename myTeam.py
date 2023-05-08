@@ -77,31 +77,41 @@ class DummyAgent(CaptureAgent):
     CaptureAgent.registerInitialState in captureAgents.py.
     '''
     CaptureAgent.registerInitialState(self, gameState)
-    self.agent_pos = gameState.getAgentPosition(self.index)
-    self.currentPath = None
-    # grid = Grid()
-    # grid = grid.asList()
-    # g_state = [(len(grid)//2, 0)]
-    # i = 0
-    # while gameState.hasWall(g_state[0],g_state[1]) == True:
-    #     g_state = [(len(g_state)//2, i)]
-    #     i+=1
-    
-       
-       
-
-
-    # self.currentPath = self.aStarSearch(self.agent_pos, gameState, g_state,avoidPositions=[], returnPosition=False)
-    # print(self.currentPath)
-
-
+ 
     '''
     Your initialization code goes here, if you need any.
     '''
-    # gameStateTest = GameState.getAgentState(self.)
-    #print(self.agent_pos)
-    
+    self.currentPath = []
+    self.patrol_positions = []
+    self.enemy_pacman = None
+    self.get_patrol_positions(gameState)
+    self.opponent_indexes = self.getOpponents(gameState)
+    enemy1, enemy2 = gameState.getAgentPosition(self.opponent_indexes[0]),gameState.getAgentPosition(self.opponent_indexes[1])
+    self.agent_pos = gameState.getAgentPosition(self.index)
+    self.currentPath =  self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
+    self.grid = self.getFoodYouAreDefending(gameState)
+    self.x_N = self.grid.width
+    self.y_N = self.grid.height
 
+  def get_food_indexes(self,gameState):
+    result = []
+    food_positions = self.getFoodYouAreDefending(gameState)
+    for i,row in enumerate(food_positions):
+      for j,col in enumerate(row):
+        if col == True:
+          result.append((i,j))
+    return sorted(result, key = lambda x: (x[0],x[1]))
+  
+  def get_patrol_positions(self,gameState):
+     food_positions = self.get_food_indexes(gameState)
+     power_capsule = self.getCapsulesYouAreDefending(gameState)
+     if len(self.patrol_positions) < 1:
+       self.patrol_positions.append(food_positions[-1])
+       try:
+         self.patrol_positions.append(power_capsule[0])
+       except:
+         pass
+       self.patrol_positions.append(food_positions[-5])
 
   def chooseAction(self, gameState):
     """
@@ -110,34 +120,67 @@ class DummyAgent(CaptureAgent):
     '''
     You should change this in your own agent.
     '''
-    
-    #self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(2,14)],avoidPositions=[], returnPosition=False)
-    #print(type(self.currentPath))
-
-    
-    #return  random.choice(gameState.getLegalActions(self.index))
-    ##### _____ WORKING JUST FINE _______#######
+    #print(self.getFoodYouAreDefending(gameState))
+    # enemy1, enemy2 = gameState.getAgentPosition(self.opponent_indexes[0]),gameState.getAgentPosition(self.opponent_indexes[1])
+    action = Directions.STOP
+    #self.enemy_pacman = self.getDisappearingFoodPos(gameState)
+    #if gameStateself.opponent_indexes:
+    # if len(self.enemy_pacman) > 0:
+    #    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.enemy_pacman.pop(0)], avoidPositions=[], returnPosition=False)
+    #    action = self.currentPath.pop(0)
     self.agent_pos = gameState.getAgentPosition(self.index)
-    print(self.agent_pos)
-    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(3,11)],avoidPositions=[], returnPosition=False)
-    print(self.currentPath)
-    if len(self.currentPath) > 0 :
-        action =  self.currentPath.pop(0)
+    enemy1 = gameState.getAgentPosition(self.opponent_indexes[0])
+    enemy2 = gameState.getAgentPosition(self.opponent_indexes[1])
+    if enemy1 != None:
+      if enemy1[0] > self.x_N:
+        safe_place =  self.get_safe_place(gameState)
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [safe_place], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
+      else:
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy1], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
+    elif enemy2 != None:
+      if enemy2[0] > self.x_N:
+        safe_place =  self.get_safe_place(gameState)
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [safe_place], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
+      else:
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy2], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
     else:
-        # action = 'Stop'
-        action = Directions.STOP
-        # action = random.choice(gameState.getLegalActions(self.index))
-
-
-    #print(self.currentPath[0])
+      if len(self.patrol_positions) > 0:
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
+      else:
+        self.get_patrol_positions(gameState)
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
+        action = self.currentPath.pop(0)
+  
     return action
-
   
+  def get_safe_place(self, gameState):
+    now = self.grid
+    x_value = len(now[0])//2 - 1
+    for y_value in range(0,len(now)):
+       if gameState.hasWall(x_value, y_value) == False:
+         return x_value,y_value
+       
+
+  def getDisappearingFoodPos(self, gameState):
+    foodPos = []
+    if len(self.observationHistory) >2:
+      prev = self.getPreviousObservation()
+      now = self.getCurrentObservation()
+      for i in range(len(prev)):
+        for j in range(len(prev[0])):
+            if prev[i][j] != self.foodGrid[i][j]:
+              foodPos.append((i,j))
+    return foodPos
 
 
 
-  
-  def aStarSearch(self, startPosition, gameState, goalPositions, avoidPositions=[], returnPosition=False):
+
+  def aStarSearch(self, startPosition, gameState, goalPositions, avoidPositions=[] ,returnPosition=False):
     """
     Finds the distance between the agent with the given index and its nearest goalPosition
     """
@@ -159,9 +202,21 @@ class DummyAgent(CaptureAgent):
 
     #print(currentPosition, "CURRERERERFAE:SDFA")
     # Priority queue uses the maze distance between the entered point and its closest goal position to decide which comes first
+    # def priority(entry):
+    #    if entry[0] in avoidPositions:
+    #       return entry[2] + width * height
+    #    elif entry[0] in closePositions:
+    #       return 1
+    #    else:
+    #       min(util.manhattanDistance(entry[0],endPosition) for )
+          
+    # queue = util.PriorityQueueWithFunction(
+    #     lambda entry: entry[2] + width * height if entry[0] in avoidPositions else 0 + min(
+    #         util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
+    
     queue = util.PriorityQueueWithFunction(
-        lambda entry: entry[2] + width * height if entry[0] in avoidPositions else 0 + min(
-            util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
+      lambda entry: 2 if entry[0] in avoidPositions else 0 + min(
+          util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
 
     #print(queue,'queueueuueueueueueuueue')
     # Keeps track of visited positions
