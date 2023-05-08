@@ -16,6 +16,7 @@ from captureAgents import CaptureAgent
 import random, time, util
 from game import Directions
 import game
+from game import Actions
 
 #################
 # Team creation #
@@ -72,21 +73,97 @@ class DummyAgent(CaptureAgent):
     CaptureAgent.registerInitialState in captureAgents.py.
     '''
     CaptureAgent.registerInitialState(self, gameState)
+    self.agent_pos = gameState.getAgentPosition(self.index)
+    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(2,14)],avoidPositions=[], returnPosition=False)
+    # print(self.currentPath)
 
     '''
     Your initialization code goes here, if you need any.
     '''
+    # gameStateTest = GameState.getAgentState(self.)
+    #print(self.agent_pos)
+    
 
 
   def chooseAction(self, gameState):
     """
     Picks among actions randomly.
     """
-    actions = gameState.getLegalActions(self.index)
-
     '''
     You should change this in your own agent.
     '''
+    
+    #self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(2,14)],avoidPositions=[], returnPosition=False)
+    #print(type(self.currentPath))
 
-    return random.choice(actions)
+    
+    #return  random.choice(gameState.getLegalActions(self.index))
+    ##### _____ WORKING JUST FINE _______#######
+    print(self.currentPath)
+    if len(self.currentPath) > 0 :
+        action =  self.currentPath.pop(0)
+    else:
+        action = 'Stop'
+    #print(self.currentPath[0])
+    print(gameState.getAgentPosition(self.index))
+    return action
+  
+
+
+
+  
+  def aStarSearch(self, startPosition, gameState, goalPositions, avoidPositions=[], returnPosition=False):
+    """
+    Finds the distance between the agent with the given index and its nearest goalPosition
+    """
+    #print("ASTAR STARTED")
+    walls = gameState.getWalls()
+    width = walls.width
+    height = walls.height
+    walls = walls.asList()
+
+    actions = [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]
+    actionVectors = [Actions.directionToVector(action) for action in actions]
+    # Change action vectors to integers so they work correctly with indexing
+    actionVectors = [tuple(int(number) for number in vector) for vector in actionVectors]
+    #print(actionVectors)
+
+    # Values are stored a 3-tuples, (Position, Path, TotalCost)
+
+    currentPosition, currentPath, currentTotal = startPosition, [], 0
+
+    #print(currentPosition, "CURRERERERFAE:SDFA")
+    # Priority queue uses the maze distance between the entered point and its closest goal position to decide which comes first
+    queue = util.PriorityQueueWithFunction(
+        lambda entry: entry[2] + width * height if entry[0] in avoidPositions else 0 + min(
+            util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
+
+    #print(queue,'queueueuueueueueueuueue')
+    # Keeps track of visited positions
+    visited = {currentPosition}
+    while currentPosition not in goalPositions:
+
+        possiblePositions = [((currentPosition[0] + vector[0], currentPosition[1] + vector[1]), action) for
+                              vector, action in zip(actionVectors, actions)]
+        legalPositions = [(position, action) for position, action in possiblePositions if position not in walls]
+        #print(legalPositions, 'LEEGAALLL    POSSSSSS')
+
+        for position, action in legalPositions:
+            if position not in visited:
+                visited.add(position)
+                
+                queue.push((position, currentPath + [action], currentTotal + 1))
+
+        # This shouldn't ever happen...But just in case...
+        if len(queue.heap) == 0:
+            return None
+        else:
+            currentPosition, currentPath, currentTotal = queue.pop()
+
+
+    #print(currentPath)
+    if returnPosition:
+        return currentPath, currentPosition
+    else:
+        return currentPath
 

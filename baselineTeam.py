@@ -47,6 +47,7 @@ def createTeam(firstIndex, secondIndex, isRed,
   any extra arguments, so you should make sure that the default
   behavior is what you want for the nightly contest.
   """
+
   return [eval(first)(firstIndex), eval(second)(secondIndex)]
 
 ##########
@@ -68,6 +69,7 @@ class ReflexCaptureAgent(CaptureAgent):
     """
     actions = gameState.getLegalActions(self.index)
 
+    
     # You can profile your evaluation time by uncommenting these lines
     # start = time.time()
     values = [self.evaluate(gameState, a) for a in actions]
@@ -108,6 +110,8 @@ class ReflexCaptureAgent(CaptureAgent):
     Computes a linear combination of features and feature weights
     """
     features = self.getFeatures(gameState, action)
+    # type(self)
+    # print(features)
     weights = self.getWeights(gameState, action)
     return features * weights
 
@@ -135,6 +139,7 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
   """
   def getFeatures(self, gameState, action):
     features = util.Counter()
+    
     successor = self.getSuccessor(gameState, action)
     foodList = self.getFood(successor).asList()    
     features['successorScore'] = -len(foodList)#self.getScore(successor)
