@@ -26,7 +26,7 @@ import numpy as np
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'DefensiveAgent', second = 'DefensiveAgent'):
+               first = 'OffensiveAgent', second = 'OffensiveAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -49,7 +49,7 @@ def createTeam(firstIndex, secondIndex, isRed,
 # Agents #
 ##########
 
-class DefensiveAgent(CaptureAgent):
+class OffensiveAgent(CaptureAgent):
   """
   A Dummy agent to serve as an example of the necessary agent structure.
   You should look at baselineTeam.py for more details about how to
@@ -87,7 +87,7 @@ class DefensiveAgent(CaptureAgent):
     
     self.x_N = self.foodGrid.width
     self.y_N = self.foodGrid.height
-
+    
     '''
     Your initialization code goes here, if you need any.
     '''
@@ -106,13 +106,18 @@ class DefensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
+    max_carry = 2
 
     closestFood = self.ClosestFoodPos(gameState)
     
-    if len(closestFood) > 0:
-      print(f"closestFood is {closestFood}")
+    if len(closestFood) > 0 and numCarrying < max_carry:
+      # print(f"closestFood is {closestFood}")
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [closestFood],avoidPositions=[], returnPosition=False)     
-        
+    else:
+      closestHome = self.ClosestHomePos(gameState)
+      # print(f"closestFood is {closestHome}")
+      self.currentPath = self.aStarSearch(self.agent_pos, gameState, [closestHome],avoidPositions=[], returnPosition=False)          
+
     if len(self.currentPath) > 0 and self.currentPath[0] in gameState.getLegalActions(self.index):
         action = self.currentPath.pop(0)
     else:
@@ -123,27 +128,27 @@ class DefensiveAgent(CaptureAgent):
 
 
   def ClosestHomePos(self, gameState):
-    best_pos = ()     
-    enemyFoodGrid = self.getFood(gameState)
-    
-    found = False
-    min_dist = 1000
-    distance = 0
-    for i in range(17, 32):
+    best_pos = ()   
+    min_dist = 1000  
+    if not gameState.isOnRedTeam(self.index):
+        i = 17      
+        for j in range(16):
+          if not self.walls[i][j]:          
+            distance = self.getMazeDistance(self.agent_pos, (i,j))
+            if distance < min_dist:
+              min_dist = distance
+              best_pos = (i,j)
+    else:
       for j in range(16):
-        if enemyFoodGrid[i][j]:
-          found = True
+        i = 14
+        if not self.walls[i][j]:          
           distance = self.getMazeDistance(self.agent_pos, (i,j))
           if distance < min_dist:
             min_dist = distance
-            best_pos = (i,j)
-      if found:
-         break
+            best_pos = (i,j) 
       
     return best_pos 
 
-
-    return  
 
   def ClosestFoodPos(self, gameState):
     best_pos = ()     

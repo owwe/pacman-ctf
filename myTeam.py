@@ -19,13 +19,15 @@ import game
 from game import Actions
 from game import Grid
 from capture import GameState
+from DefensiveAgents import DefensiveAgent
+from OffensiveAgents import OffensiveAgent
 
 #################
 # Team creation #
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'DummyAgent', second = 'DummyAgent'):
+               first = 'DefensiveAgent', second = 'OffensiveAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
