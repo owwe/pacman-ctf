@@ -103,22 +103,34 @@ class DefensiveAgent(CaptureAgent):
     You should change this in your own agent.
     '''
     self.agent_pos = gameState.getAgentPosition(self.index)
-    
+    action = Directions.STOP
 
     foodPos = self.DisappearingFoodPos(gameState)
-    closestFood = self.ClosestFoodPos(gameState)
+    capsPos = self.PowerCapsulePos(gameState)
+    # print(f"capsPos {capsPos}")
+    # closestFood = self.ClosestFoodPos(gameState)
     if len(foodPos) > 0:
-        print(foodPos[0])
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [foodPos[0]],avoidPositions=[], returnPosition=False)   
+      # print(foodPos[0])
+      self.currentPath = self.aStarSearch(self.agent_pos, gameState, [foodPos[0]],avoidPositions=[], returnPosition=False)   
             
     if len(self.currentPath) > 0 and self.currentPath[0] in gameState.getLegalActions(self.index):
         action = self.currentPath.pop(0)
     else:
+      if len(capsPos) > 0 and self.agent_pos is not capsPos[0]:
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [capsPos[0]],avoidPositions=[], returnPosition=False)    
+        if len(self.currentPath) > 0 and self.currentPath[0] in gameState.getLegalActions(self.index):
+          action = self.currentPath.pop(0)
+      
+           
       # action = 'Stop'
-      # action = Directions.STOP
-      action = random.choice(gameState.getLegalActions(self.index))
+      # action = random.choice(gameState.getLegalActions(self.index))
     return action
 
+
+  def PowerCapsulePos(self, gameState):
+    capsPos = ()
+    capsPos = self.getCapsulesYouAreDefending(gameState)
+    return capsPos
 
   def ClosestFoodPos(self, gameState):
     best_pos = ()     

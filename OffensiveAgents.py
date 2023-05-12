@@ -87,12 +87,11 @@ class OffensiveAgent(CaptureAgent):
     
     self.x_N = self.foodGrid.width
     self.y_N = self.foodGrid.height
-    
+    self.opponents = self.getOpponents(gameState)
     '''
     Your initialization code goes here, if you need any.
     '''
-    # gameStateTest = GameState.getAgentState(self.)
-    #print(self.agent_pos)
+    
     
 
 
@@ -106,11 +105,12 @@ class OffensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
-    max_carry = 2
+    max_carry = 3
 
     closestFood = self.ClosestFoodPos(gameState)
-    
-    if len(closestFood) > 0 and numCarrying < max_carry:
+    enemyClose = self.EnemyClose(gameState)
+
+    if len(closestFood) > 0 and numCarrying < max_carry and not enemyClose:
       # print(f"closestFood is {closestFood}")
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [closestFood],avoidPositions=[], returnPosition=False)     
     else:
@@ -126,6 +126,26 @@ class OffensiveAgent(CaptureAgent):
       action = random.choice(gameState.getLegalActions(self.index))
     return action
 
+
+  def EnemyClose(self, gameState):
+    loc1 = gameState.getAgentPosition(self.opponents[0])
+    loc2 = gameState.getAgentPosition(self.opponents[1])
+    if loc1 is not None or loc2 is not None:
+      return True
+    return False
+
+  def ClosestEnemyDist(self,gameState):
+    loc1 = gameState.getAgentPosition(self.opponents[0])
+    loc2 = gameState.getAgentPosition(self.opponents[1]) 
+    dist1 = self.getMazeDistance(self.agent_pos, loc1)
+    dist2 = self.getMazeDistance(self.agent_pos, loc2)
+    # if dist1 < dist2:
+    #   min_dist = dist1
+    # else:
+    #   min_dist = dist2
+    min_dist = min(dist1,dist2)
+    
+    return min_dist
 
   def ClosestHomePos(self, gameState):
     best_pos = ()   
