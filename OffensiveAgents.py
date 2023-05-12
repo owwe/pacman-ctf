@@ -78,11 +78,12 @@ class DefensiveAgent(CaptureAgent):
     CaptureAgent.registerInitialState(self, gameState)
     self.agent_pos = gameState.getAgentPosition(self.index)
     self.currentPath = []
-    self.foodGrid = self.getFoodYouAreDefending(gameState)
+    self.walls = gameState.getWalls()
     # if gameState.isOnRedTeam(self.index):
     #    self.foodGrid = gameState.getRedFood()
     # else:
     #    self.foodGrid = gameState.getBlueFood()
+    self.foodGrid = self.getFoodYouAreDefending(gameState)
     
     self.x_N = self.foodGrid.width
     self.y_N = self.foodGrid.height
@@ -103,14 +104,15 @@ class DefensiveAgent(CaptureAgent):
     You should change this in your own agent.
     '''
     self.agent_pos = gameState.getAgentPosition(self.index)
-    
+    agentState = gameState.getAgentState(self.index)
+    numCarrying = agentState.numCarrying
 
-    foodPos = self.DisappearingFoodPos(gameState)
     closestFood = self.ClosestFoodPos(gameState)
-    if len(foodPos) > 0:
-        print(foodPos[0])
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [foodPos[0]],avoidPositions=[], returnPosition=False)   
-            
+    
+    if len(closestFood) > 0:
+      print(f"closestFood is {closestFood}")
+      self.currentPath = self.aStarSearch(self.agent_pos, gameState, [closestFood],avoidPositions=[], returnPosition=False)     
+        
     if len(self.currentPath) > 0 and self.currentPath[0] in gameState.getLegalActions(self.index):
         action = self.currentPath.pop(0)
     else:
@@ -120,12 +122,8 @@ class DefensiveAgent(CaptureAgent):
     return action
 
 
-  def ClosestFoodPos(self, gameState):
+  def ClosestHomePos(self, gameState):
     best_pos = ()     
-    # if gameState.isOnRedTeam(self.index):
-    #   enemyFoodGrid = gameState.getBlueFood()
-    # else:
-    #   enemyFoodGrid = gameState.getRedFood()
     enemyFoodGrid = self.getFood(gameState)
     
     found = False
@@ -141,6 +139,45 @@ class DefensiveAgent(CaptureAgent):
             best_pos = (i,j)
       if found:
          break
+      
+    return best_pos 
+
+
+    return  
+
+  def ClosestFoodPos(self, gameState):
+    best_pos = ()     
+    # if gameState.isOnRedTeam(self.index):
+    #   enemyFoodGrid = gameState.getBlueFood()
+    # else:
+    #   enemyFoodGrid = gameState.getRedFood()
+    enemyFoodGrid = self.getFood(gameState)
+    
+    found = False
+    min_dist = 1000
+    distance = 0
+    if gameState.isOnRedTeam(self.index):
+      for i in range(17, 32):
+        for j in range(16):
+          if enemyFoodGrid[i][j]:
+            found = True
+            distance = self.getMazeDistance(self.agent_pos, (i,j))
+            if distance < min_dist:
+                min_dist = distance
+                best_pos = (i,j)
+        if found:
+          break
+    else:
+      for i in range(16):
+        for j in range(16):
+          if enemyFoodGrid[i][j]:
+            found = True
+            distance = self.getMazeDistance(self.agent_pos, (i,j))
+            if distance < min_dist:
+                min_dist = distance
+                best_pos = (i,j)
+        if found:
+          break  
       
     return best_pos 
 
