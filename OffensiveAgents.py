@@ -20,6 +20,8 @@ from game import Actions
 from game import Grid
 from capture import GameState
 import numpy as np
+import HMM
+
 
 #################
 # Team creation #
@@ -79,6 +81,7 @@ class OffensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     self.currentPath = []
     self.walls = gameState.getWalls()
+    
     # if gameState.isOnRedTeam(self.index):
     #    self.foodGrid = gameState.getRedFood()
     # else:
@@ -88,6 +91,18 @@ class OffensiveAgent(CaptureAgent):
     self.x_N = self.foodGrid.width
     self.y_N = self.foodGrid.height
     self.opponents = self.getOpponents(gameState)
+
+    #HMM stuff below
+    self.enemies = self.getOpponents(gameState)
+    self.Forward1 = HMM.ForwardPass(self) #one enemy agent
+    self.Forward2 = HMM.ForwardPass(self) #other enemy agent
+    self.Forward1.InitializeTransition(self, gameState)
+    self.Forward2.InitializeTransition(self, gameState)
+
+    init_pos1 = gameState.getInitialAgentPosition(self.enemies[0])
+    init_pos2 = gameState.getInitialAgentPosition(self.enemies[1])
+    self.Forward1.CertainState(init_pos1)
+    self.Forward2.CertainState(init_pos2)
     '''
     Your initialization code goes here, if you need any.
     '''
@@ -102,10 +117,19 @@ class OffensiveAgent(CaptureAgent):
     '''
     You should change this in your own agent.
     '''
+    
+
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
     max_carry = 3
+
+    #HMM stuff
+    noise_dist1 = gameState.getAgentDistances()[self.enemies[0]]
+    noise_dist2 = gameState.getAgentDistances()[self.enemies[1]]
+    self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
+    self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
+
 
     closestFood = self.ClosestFoodPos(gameState)
     enemyClose = self.EnemyClose(gameState)
