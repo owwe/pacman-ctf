@@ -79,7 +79,6 @@ class DummyAgent(CaptureAgent):
     '''
     self.currentPath = []
     self.patrol_positions = []
-    self.capsule_pos = sorted(self.getCapsulesYouAreDefending(gameState), key = lambda x: x[0])
     self.safe_zone = None
     self.opponent_indexes = self.getOpponents(gameState)
     enemy1, enemy2 = gameState.getAgentPosition(self.opponent_indexes[0]),gameState.getAgentPosition(self.opponent_indexes[1])
@@ -88,12 +87,16 @@ class DummyAgent(CaptureAgent):
     self.grid = self.getFoodYouAreDefending(gameState)
 
     if gameState.isOnRedTeam(self.index):
+      self.capsule_pos = sorted(self.getCapsulesYouAreDefending(gameState), key = lambda x: x[0],reverse= True)
       self.base_x = self.grid.width//2 - 1 
       self.safe_zone = list(range(0,self.base_x + 1))
 
     else:
+      self.capsule_pos = sorted(self.getCapsulesYouAreDefending(gameState), key = lambda x: x[0],reverse= False)
       self.base_x = self.grid.width//2 + 1
       self.safe_zone = list(range(self.base_x - 1 ,self.grid.width))
+    
+    print(self.capsule_pos)
     
     self.x_N = self.grid.width
     self.y_N = self.grid.height
@@ -178,10 +181,17 @@ class DummyAgent(CaptureAgent):
     else:
       print("PATROL MODE ON ")
       if len(self.currentPath) < 1 :
-        if util.manhattanDistance(self.agent_pos,self.border[0]) < 7:
+        try:
+          if util.manhattanDistance(self.agent_pos,self.capsule_pos[0]) > 5:
+            self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[0]], avoidPositions=self.avoid, returnPosition=False)
+        except:
+          pass
+
+           
+        if util.manhattanDistance(self.agent_pos,self.border[0]) < 3:
           print("NORTH")
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[-1]], avoidPositions=self.avoid, returnPosition=False)
-        elif util.manhattanDistance(self.agent_pos,self.border[-1]) < 7: 
+        elif util.manhattanDistance(self.agent_pos,self.border[-1]) < 3: 
           print('South')
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[0]], avoidPositions=self.avoid, returnPosition=False)  
         else:
@@ -192,9 +202,8 @@ class DummyAgent(CaptureAgent):
             else:
               random_pos = self.capsule_pos[1]
           except:
-            random_pos = random.choice(self.border + self.capsule_pos)
+            random_pos = random.choice(self.capsule_pos)
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [random_pos], avoidPositions=self.avoid, returnPosition=False)
-         
     if len(self.currentPath) < 1:
       return action
     return self.currentPath.pop(0)
