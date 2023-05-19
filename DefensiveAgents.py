@@ -105,6 +105,8 @@ class DefensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     action = Directions.STOP
 
+    # print(f"Dist to self: {gameState.getAgentDistances()[self.index]}")
+
     foodPos = self.DisappearingFoodPos(gameState)
     capsPos = self.PowerCapsulePos(gameState)
     # print(f"capsPos {capsPos}")

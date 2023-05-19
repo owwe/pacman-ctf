@@ -103,6 +103,7 @@ class OffensiveAgent(CaptureAgent):
     init_pos2 = gameState.getInitialAgentPosition(self.enemies[1])
     self.Forward1.CertainState(init_pos1)
     self.Forward2.CertainState(init_pos2)
+    # print(init_pos1)
     '''
     Your initialization code goes here, if you need any.
     '''
@@ -127,9 +128,20 @@ class OffensiveAgent(CaptureAgent):
     #HMM stuff
     noise_dist1 = gameState.getAgentDistances()[self.enemies[0]]
     noise_dist2 = gameState.getAgentDistances()[self.enemies[1]]
+    # print(f"enemy1: {noise_dist1}, enemy2: {noise_dist2}")
     self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
     self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
 
+    self.Forward1.ComputeAlphat_xt()
+    self.Forward2.ComputeAlphat_xt()
+
+    beliefPos1 = self.Forward1.ReturnBeliefState()
+    beliefPos2 = self.Forward2.ReturnBeliefState()
+    
+    beliefPosList = [beliefPos1, beliefPos2]
+    print(beliefPos1)
+    # self.Forward1.Test()
+    self.debugDraw(beliefPosList, [1,0,0], clear=True)
 
     closestFood = self.ClosestFoodPos(gameState)
     enemyClose = self.EnemyClose(gameState)

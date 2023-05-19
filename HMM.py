@@ -67,17 +67,60 @@ class ForwardPass:
     self.E = np.zeros((self.x_N * self.y_N))
     for i in range(self.x_N * self.y_N):
       pos = self.IndexToPos(i)
-      if not gameState.hasWall(pos[0], pos[1]):
-        true_dist = self.agent.getMazeDistance(agent_pos, pos)
-        prob = gameState.getDistanceProb(true_dist, noise_dis)
-        self.E[i] = prob
-    
+      # if not gameState.hasWall(pos[0], pos[1]):
+      # true_dist = self.agent.getMazeDistance(agent_pos, pos)
+      true_dist = self.Manhattan(agent_pos, pos)
+      prob = gameState.getDistanceProb(true_dist, noise_dis)
+      self.E[i] = prob
+
+    # print(self.E[self.PosToIndex((30,13))])
+        
+
+  def ComputeAlphat_xt(self):
+    self.alphat_xt = np.zeros((self.x_N * self.y_N))
+    # print(f"alphat-1 is {self.alphat_1_xt}")
+
+    for i in range(self.x_N * self.y_N):
+      sum = 0.0
+      for j in range(self.x_N * self.y_N):
+        sum += self.T[j,i] * self.alphat_1_xt[j]
+      # if sum > 0:
+        # print(f"sum is {sum}")
+        # print(f"Emission is: {self.E[i]}")
+      self.alphat_xt[i] = self.E[i] * sum
+    # print("done")  
+
 
   def CertainState(self, correct_pos):
     index = self.PosToIndex(correct_pos)
-    self.alphat_1_xt[index] = 1
+    self.alphat_1_xt = np.zeros((self.x_N * self.y_N))
+    self.alphat_1_xt[index] = 1.0
+    # print(self.alphat_1_xt)
 
-  def ReturnBeliefState(self, agent_pos, agent_dis):
-    pass
+  def ReturnBeliefState(self):
+    #remember to normalize alpha_t_xt and put as alphat-1_xt
+    # print(f"alphat is {self.alphat_xt}")
+    beliefPosIndex = np.argmax(self.alphat_xt)
+    self.beliefPos = self.IndexToPos(beliefPosIndex)
+    highest_alpha = self.alphat_xt[beliefPosIndex]
+    for i in range(self.x_N * self.y_N):
+      self.alphat_xt[i] = self.alphat_xt[i] /  highest_alpha
+    
+    self.alphat_1_xt = np.copy(self.alphat_xt)
+    return self.beliefPos
+  
+  def Test(self):
+    init = (30,14)
+    next = (30,13)
+    ind = self.PosToIndex(init)
+    ind_next = self.PosToIndex(next)
+    print(self.T[ind,ind_next])
+
+  def Manhattan(self,pos1, pos2):
+    x = abs(pos1[0]- pos2[0])
+    y = abs(pos1[1]- pos2[1])
+    return x + y
+    
+    
         
     
