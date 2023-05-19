@@ -99,10 +99,10 @@ class OffensiveAgent(CaptureAgent):
     self.Forward1.InitializeTransition(self, gameState)
     self.Forward2.InitializeTransition(self, gameState)
 
-    init_pos1 = gameState.getInitialAgentPosition(self.enemies[0])
-    init_pos2 = gameState.getInitialAgentPosition(self.enemies[1])
-    self.Forward1.CertainState(init_pos1)
-    self.Forward2.CertainState(init_pos2)
+    self.init_pos1 = gameState.getInitialAgentPosition(self.enemies[0])
+    self.init_pos2 = gameState.getInitialAgentPosition(self.enemies[1])
+    self.Forward1.CertainState(self.init_pos1)
+    self.Forward2.CertainState(self.init_pos2)
     # print(init_pos1)
     '''
     Your initialization code goes here, if you need any.
@@ -132,8 +132,8 @@ class OffensiveAgent(CaptureAgent):
     self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
     self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
 
-    self.Forward1.ComputeAlphat_xt()
-    self.Forward2.ComputeAlphat_xt()
+    self.Forward1.ComputeAlphat_xt(self.init_pos1)
+    self.Forward2.ComputeAlphat_xt(self.init_pos2)
 
     beliefPos1 = self.Forward1.ReturnBeliefState()
     beliefPos2 = self.Forward2.ReturnBeliefState()

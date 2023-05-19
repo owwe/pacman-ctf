@@ -76,10 +76,10 @@ class ForwardPass:
     # print(self.E[self.PosToIndex((30,13))])
         
 
-  def ComputeAlphat_xt(self):
+  def ComputeAlphat_xt(self, initPos):
     self.alphat_xt = np.zeros((self.x_N * self.y_N))
     # print(f"alphat-1 is {self.alphat_1_xt}")
-
+    allzero = True
     for i in range(self.x_N * self.y_N):
       sum = 0.0
       for j in range(self.x_N * self.y_N):
@@ -88,6 +88,13 @@ class ForwardPass:
         # print(f"sum is {sum}")
         # print(f"Emission is: {self.E[i]}")
       self.alphat_xt[i] = self.E[i] * sum
+      if self.alphat_xt[i] != 0:
+        allzero = False
+    
+    if allzero:
+      ind = self.PosToIndex(initPos)
+      self.alphat_xt[ind] = 1
+
     # print("done")  
 
 
