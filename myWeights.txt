@@ -1,0 +1,1 @@
+{'closestGhostDistance': 32.8698758781666, 'closestCapsuleDistance': 54.95292664106621, 'successorFoodScore': 20.774139321667807, 'onOffense': 63.81442893859289, 'closestFoodDistance': -2.3545086025412494, 'bias': 1.0, 'numGhostsOneStepAway': -23.34475561715782, 'numGhostsTwoStepsAway': 1.8315871805609016, 'eatsFoodNext': 32.84029154417439}
