@@ -257,7 +257,7 @@ def generateMaze(seed = None):
   if not seed:
     seed = random.randint(1,MAX_DIFFERENT_MAZES)
   random.seed(seed)
-  maze = Maze(16,16)
+  maze = Maze(24,24)
   gapfactor = min(0.65,random.gauss(0.5,0.1))
   skip = make_with_prison(maze, depth=0, gaps=3, vert=True, min_width=1, gapfactor=gapfactor)
   maze.to_map()

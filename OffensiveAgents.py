@@ -118,30 +118,14 @@ class OffensiveAgent(CaptureAgent):
     '''
     You should change this in your own agent.
     '''
-    
+    init_time = time.time()    
 
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
-    max_carry = 3
+    max_carry = 10
 
-    #HMM stuff
-    noise_dist1 = gameState.getAgentDistances()[self.enemies[0]]
-    noise_dist2 = gameState.getAgentDistances()[self.enemies[1]]
-    # print(f"enemy1: {noise_dist1}, enemy2: {noise_dist2}")
-    self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
-    self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
-
-    self.Forward1.ComputeAlphat_xt(self.init_pos1)
-    self.Forward2.ComputeAlphat_xt(self.init_pos2)
-
-    beliefPos1 = self.Forward1.ReturnBeliefState()
-    beliefPos2 = self.Forward2.ReturnBeliefState()
     
-    beliefPosList = [beliefPos1, beliefPos2]
-    print(beliefPos1)
-    # self.Forward1.Test()
-    self.debugDraw(beliefPosList, [1,0,0], clear=True)
 
     closestFood = self.ClosestFoodPos(gameState)
     enemyClose = self.EnemyClose(gameState)
@@ -160,6 +144,10 @@ class OffensiveAgent(CaptureAgent):
       # action = 'Stop'
       # action = Directions.STOP
       action = random.choice(gameState.getLegalActions(self.index))
+
+    final_time = time.time()
+    time_to_choose = final_time - init_time
+    # print(time_to_choose)
     return action
 
 
@@ -167,7 +155,35 @@ class OffensiveAgent(CaptureAgent):
     loc1 = gameState.getAgentPosition(self.opponents[0])
     loc2 = gameState.getAgentPosition(self.opponents[1])
     if loc1 is not None or loc2 is not None:
+      if loc1 is not None:
+        self.Forward1.CertainState(loc1)
+      if loc2 is not None:
+        self.Forward2.CertainState(loc2)  
       return True
+    
+    else:
+    #HMM stuff
+      noise_dist1 = gameState.getAgentDistances()[self.enemies[0]]
+      noise_dist2 = gameState.getAgentDistances()[self.enemies[1]]
+      # print(f"enemy1: {noise_dist1}, enemy2: {noise_dist2}")
+      self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
+      self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
+
+      self.Forward1.ComputeAlphat_xt(self.init_pos1)
+      self.Forward2.ComputeAlphat_xt(self.init_pos2)
+
+      beliefPos1 = self.Forward1.ReturnBeliefState()
+      beliefPos2 = self.Forward2.ReturnBeliefState()
+      
+      beliefPosList = [beliefPos1, beliefPos2]
+      # print(beliefPos1)
+      # self.Forward1.Test()
+      self.debugDraw(beliefPosList, [1,0,0], clear=True)
+
+      dist1 = self.getMazeDistance(self.agent_pos, beliefPos1)
+      dist2 = self.getMazeDistance(self.agent_pos, beliefPos2)
+      if dist1 < 10 or dist2 < 10:
+         return True
     return False
 
   def ClosestEnemyDist(self,gameState):
