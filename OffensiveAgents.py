@@ -126,7 +126,7 @@ class OffensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
-    max_carry = 15
+    max_carry = 10
     self.timer +=1
 
     
@@ -151,7 +151,7 @@ class OffensiveAgent(CaptureAgent):
 
     final_time = time.time()
     time_to_choose = final_time - init_time
-    print(time_to_choose)
+    # print(time_to_choose)
     return action
 
 

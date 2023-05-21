@@ -121,8 +121,14 @@ class ForwardPass:
         allzero = False
     
     if allzero:
-      ind = self.PosToIndex(initPos)
-      self.alphat_xt[ind] = 1
+      for i in range(self.x_N * self.y_N):
+        pos = self.IndexToPos(i)
+        x = pos[0]
+        y = pos[1]
+        if not gameState.hasWall(x,y):
+          self.alphat_xt[i] = 0.1
+      # ind = self.PosToIndex(initPos)
+      # self.alphat_xt[ind] = 1
 
     # print("done")  
 

@@ -113,8 +113,8 @@ class DummyAgent(CaptureAgent):
 
 
     self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[1]], avoidPositions=self.avoid, returnPosition=False)
-    print('self base x', self.base_x)
-    print('safe zone',self.safe_zone)
+    # print('self base x', self.base_x)
+    # print('safe zone',self.safe_zone)
 
 
  # Getting food indexes
@@ -165,36 +165,36 @@ class DummyAgent(CaptureAgent):
     disappearing_food = self.getDisappearingFoodPos(gameState)
     #print('patrol pos ', self.patrol_positions)
     if enemy1 != None and enemy1[0] not in self.safe_zone:
-      print('safe zone stand')
+      # print('safe zone stand')
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(self.base_x, enemy1[1])], avoidPositions=self.avoid, returnPosition=False)
     elif enemy2 != None and enemy2[0] not in self.safe_zone:
-      print('safe zone stand')
+      # print('safe zone stand')
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(self.base_x, enemy2[1])], avoidPositions=self.avoid, returnPosition=False)
     elif enemy1 != None:
-        print('RUSHH')
+        # print('RUSHH')
         self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy1], avoidPositions=self.avoid, returnPosition=False)
     elif enemy2 != None:
-        print('RUSHH')
+        # print('RUSHH')
         self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy2], avoidPositions=self.avoid, returnPosition=False)
     elif disappearing_food is not None:
-       print('enemy attack')
+      #  print('enemy attack')
        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [disappearing_food], avoidPositions=self.avoid, returnPosition=False)
     else:
       if len(self.currentPath) < 1 :
-        print("PATROL MODE ON ")
+        # print("PATROL MODE ON ")
         try:
           if util.manhattanDistance(self.agent_pos,self.capsule_pos[0]) > 5:
             self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[0]], avoidPositions=self.avoid, returnPosition=False)
         except:
           pass
         if util.manhattanDistance(self.agent_pos,self.border[0]) < 3:
-          print("NORTH")
+          # print("NORTH")
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[-1]], avoidPositions=self.avoid, returnPosition=False)
         elif util.manhattanDistance(self.agent_pos,self.border[-1]) < 3: 
-          print('South')
+          # print('South')
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[0]], avoidPositions=self.avoid, returnPosition=False)  
         else:
-          print('GO TO RANDOM POS')
+          # print('GO TO RANDOM POS')
           try:
             random_pos = random.choice(self.capsule_pos)
           except:
