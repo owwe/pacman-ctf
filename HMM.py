@@ -83,6 +83,8 @@ class ForwardPass:
     for i in range(self.x_N * self.y_N):
       sum = 0.0
       for j in range(self.x_N * self.y_N):
+        if self.T[j,i] == 0:
+          continue
         sum += self.T[j,i] * self.alphat_1_xt[j]
       # if sum > 0:
         # print(f"sum is {sum}")
