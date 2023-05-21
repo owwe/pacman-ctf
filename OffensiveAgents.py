@@ -123,7 +123,7 @@ class OffensiveAgent(CaptureAgent):
     self.agent_pos = gameState.getAgentPosition(self.index)
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
-    max_carry = 10
+    max_carry = 15
 
     
 
@@ -182,7 +182,7 @@ class OffensiveAgent(CaptureAgent):
 
       dist1 = self.getMazeDistance(self.agent_pos, beliefPos1)
       dist2 = self.getMazeDistance(self.agent_pos, beliefPos2)
-      if dist1 < 10 or dist2 < 10:
+      if dist1 < 8 or dist2 < 8:
          return True
     return False
 
@@ -203,16 +203,17 @@ class OffensiveAgent(CaptureAgent):
     best_pos = ()   
     min_dist = 1000  
     if not gameState.isOnRedTeam(self.index):
-        i = 17      
-        for j in range(16):
+        # i = 17   
+        i = (int)(self.x_N / 2)   
+        for j in range(self.y_N):
           if not self.walls[i][j]:          
             distance = self.getMazeDistance(self.agent_pos, (i,j))
             if distance < min_dist:
               min_dist = distance
               best_pos = (i,j)
     else:
-      for j in range(16):
-        i = 14
+      i = (int)(self.x_N / 2) - 1  
+      for j in range(self.y_N):
         if not self.walls[i][j]:          
           distance = self.getMazeDistance(self.agent_pos, (i,j))
           if distance < min_dist:
@@ -234,8 +235,8 @@ class OffensiveAgent(CaptureAgent):
     min_dist = 1000
     distance = 0
     if gameState.isOnRedTeam(self.index):
-      for i in range(17, 32):
-        for j in range(16):
+      for i in range((int)(self.x_N / 2) , self.x_N):
+        for j in range(self.y_N):
           if enemyFoodGrid[i][j]:
             found = True
             distance = self.getMazeDistance(self.agent_pos, (i,j))
@@ -245,8 +246,8 @@ class OffensiveAgent(CaptureAgent):
         if found:
           break
     else:
-      for i in range(16):
-        for j in range(16):
+      for i in range((int)(self.x_N / 2)-1 , -1, -1):
+        for j in range(self.y_N):
           if enemyFoodGrid[i][j]:
             found = True
             distance = self.getMazeDistance(self.agent_pos, (i,j))
@@ -255,6 +256,36 @@ class OffensiveAgent(CaptureAgent):
                 best_pos = (i,j)
         if found:
           break  
+      
+    return best_pos 
+  
+  def ClosestFoodPos2(self, gameState):
+    best_pos = ()     
+    # if gameState.isOnRedTeam(self.index):
+    #   enemyFoodGrid = gameState.getBlueFood()
+    # else:
+    #   enemyFoodGrid = gameState.getRedFood()
+    enemyFoodGrid = self.getFood(gameState)
+    
+    found = False
+    min_dist = 1000
+    distance = 0
+    if gameState.isOnRedTeam(self.index):
+      for i in range((int)(self.x_N / 2) , self.x_N):
+        for j in range(self.y_N):
+          if enemyFoodGrid[i][j]:
+            distance = self.getMazeDistance(self.agent_pos, (i,j))
+            if distance < min_dist:
+                min_dist = distance
+                best_pos = (i,j)
+    else:
+      for i in range((int)(self.x_N / 2)-1 , -1, -1):
+        for j in range(self.y_N):
+          if enemyFoodGrid[i][j]:
+            distance = self.getMazeDistance(self.agent_pos, (i,j))
+            if distance < min_dist:
+                min_dist = distance
+                best_pos = (i,j)
       
     return best_pos 
 
