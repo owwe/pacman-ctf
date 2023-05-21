@@ -27,7 +27,7 @@ from OffensiveAgents import OffensiveAgent
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'DummyAgent', second = 'OffensiveAgent'):
+               first = 'DefensiveAgent', second = 'OffensiveAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -104,11 +104,10 @@ class DummyAgent(CaptureAgent):
 
 
     self.avoid = []
-    # for y in range(self.y_N):
-    #   for x in range(self.x_N):
-    #      if x not in self.safe_zone:
-    #        self.avoid.append((x,y))
-    
+    for y in range(self.y_N):
+      for x in range(self.x_N):
+         if x not in self.safe_zone:
+           self.avoid.append((x,y))
        
 
 
@@ -187,6 +186,8 @@ class DummyAgent(CaptureAgent):
             self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[0]], avoidPositions=self.avoid, returnPosition=False)
         except:
           pass
+
+           
         if util.manhattanDistance(self.agent_pos,self.border[0]) < 3:
           print("NORTH")
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[-1]], avoidPositions=self.avoid, returnPosition=False)
@@ -196,10 +197,12 @@ class DummyAgent(CaptureAgent):
         else:
           print('GO TO RANDOM POS')
           try:
-            random_pos = random.choice(self.capsule_pos)
+            if self.agent_pos != self.capsule_pos[0]:
+              random_pos =  self.capsule_pos[0]
+            else:
+              random_pos = self.capsule_pos[1]
           except:
-            pass
-          random_pos = random.choice(self.border)
+            random_pos = random.choice(self.capsule_pos)
           self.currentPath = self.aStarSearch(self.agent_pos, gameState, [random_pos], avoidPositions=self.avoid, returnPosition=False)
     if len(self.currentPath) < 1:
       return action
