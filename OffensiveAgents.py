@@ -20,7 +20,7 @@ from game import Actions
 from game import Grid
 from capture import GameState
 import numpy as np
-import HMM
+import HMM_efficient
 
 
 #################
@@ -94,8 +94,10 @@ class OffensiveAgent(CaptureAgent):
 
     #HMM stuff below
     self.enemies = self.getOpponents(gameState)
-    self.Forward1 = HMM.ForwardPass(self) #one enemy agent
-    self.Forward2 = HMM.ForwardPass(self) #other enemy agent
+    # self.Forward1 = HMM.ForwardPass(self) #one enemy agent
+    # self.Forward2 = HMM.ForwardPass(self) #other enemy agent
+    self.Forward1 = HMM_efficient.ForwardPass(self) #one enemy agent
+    self.Forward2 = HMM_efficient.ForwardPass(self) #other enemy agent
     self.Forward1.InitializeTransition(self, gameState)
     self.Forward2.InitializeTransition(self, gameState)
 
@@ -104,6 +106,7 @@ class OffensiveAgent(CaptureAgent):
     self.Forward1.CertainState(self.init_pos1)
     self.Forward2.CertainState(self.init_pos2)
     # print(init_pos1)
+    self.timer = 0
     '''
     Your initialization code goes here, if you need any.
     '''
@@ -124,13 +127,14 @@ class OffensiveAgent(CaptureAgent):
     agentState = gameState.getAgentState(self.index)
     numCarrying = agentState.numCarrying
     max_carry = 15
+    self.timer +=1
 
     
 
-    closestFood = self.ClosestFoodPos(gameState)
+    closestFood = self.ClosestFoodPos2(gameState)
     enemyClose = self.EnemyClose(gameState)
 
-    if len(closestFood) > 0 and numCarrying < max_carry and not enemyClose:
+    if len(closestFood) > 0 and numCarrying < max_carry and not enemyClose and self.timer < 280:
       # print(f"closestFood is {closestFood}")
       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [closestFood],avoidPositions=[], returnPosition=False)     
     else:
@@ -147,7 +151,7 @@ class OffensiveAgent(CaptureAgent):
 
     final_time = time.time()
     time_to_choose = final_time - init_time
-    # print(time_to_choose)
+    print(time_to_choose)
     return action
 
 
@@ -169,8 +173,8 @@ class OffensiveAgent(CaptureAgent):
       self.Forward1.ComputeEmissionMatrix(self.agent_pos, noise_dist1, gameState)
       self.Forward2.ComputeEmissionMatrix(self.agent_pos, noise_dist2, gameState)
 
-      self.Forward1.ComputeAlphat_xt(self.init_pos1)
-      self.Forward2.ComputeAlphat_xt(self.init_pos2)
+      self.Forward1.ComputeAlphat_xt(self.init_pos1, gameState)
+      self.Forward2.ComputeAlphat_xt(self.init_pos2, gameState)
 
       beliefPos1 = self.Forward1.ReturnBeliefState()
       beliefPos2 = self.Forward2.ReturnBeliefState()

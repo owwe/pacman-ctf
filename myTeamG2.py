@@ -46,10 +46,6 @@ def createTeam(firstIndex, secondIndex, isRed,
   # The following line is an example only; feel free to change it.
   return [eval(first)(firstIndex), eval(second)(secondIndex)]
 
-##########
-# Agents #
-##########
-
 class DummyAgent(CaptureAgent):
   """
   A Dummy agent to serve as an example of the necessary agent structure.
@@ -83,16 +79,45 @@ class DummyAgent(CaptureAgent):
     '''
     self.currentPath = []
     self.patrol_positions = []
-    self.enemy_pacman = None
-    self.get_patrol_positions(gameState)
+    self.safe_zone = None
     self.opponent_indexes = self.getOpponents(gameState)
     enemy1, enemy2 = gameState.getAgentPosition(self.opponent_indexes[0]),gameState.getAgentPosition(self.opponent_indexes[1])
     self.agent_pos = gameState.getAgentPosition(self.index)
-    self.currentPath =  self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
+
     self.grid = self.getFoodYouAreDefending(gameState)
+
+    if gameState.isOnRedTeam(self.index):
+      self.capsule_pos = sorted(self.getCapsulesYouAreDefending(gameState), key = lambda x: x[0],reverse= True)
+      self.base_x = self.grid.width//2 - 1 
+      self.safe_zone = list(range(0,self.base_x + 1))
+
+    else:
+      self.capsule_pos = sorted(self.getCapsulesYouAreDefending(gameState), key = lambda x: x[0],reverse= False)
+      self.base_x = self.grid.width//2 + 1
+      self.safe_zone = list(range(self.base_x - 1 ,self.grid.width))
+    
+    print(self.capsule_pos)
+    
     self.x_N = self.grid.width
     self.y_N = self.grid.height
+    self.border = self.get_border(gameState)
 
+
+    self.avoid = []
+    # for y in range(self.y_N):
+    #   for x in range(self.x_N):
+    #      if x not in self.safe_zone:
+    #        self.avoid.append((x,y))
+    
+       
+
+
+    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[1]], avoidPositions=self.avoid, returnPosition=False)
+    print('self base x', self.base_x)
+    print('safe zone',self.safe_zone)
+
+
+ # Getting food indexes
   def get_food_indexes(self,gameState):
     result = []
     food_positions = self.getFoodYouAreDefending(gameState)
@@ -101,18 +126,27 @@ class DummyAgent(CaptureAgent):
         if col == True:
           result.append((i,j))
     return sorted(result, key = lambda x: (x[0],x[1]))
-  
-  def get_patrol_positions(self,gameState):
-     food_positions = self.get_food_indexes(gameState)
-     power_capsule = self.getCapsulesYouAreDefending(gameState)
-     if len(self.patrol_positions) < 1:
-       self.patrol_positions.append(food_positions[-1])
-       try:
-         self.patrol_positions.append(power_capsule[0])
-       except:
-         pass
-       self.patrol_positions.append(food_positions[-5])
 
+  #border security
+  def get_border(self,gameState):
+    border_positions = []
+    for border_y in range(self.y_N):
+      if gameState.hasWall(self.base_x,border_y) == False:
+        border_positions.append((self.base_x,border_y))
+    border_positions =sorted(border_positions, key = lambda x : x[1],reverse = False)
+    return border_positions
+  
+  def stopPatrolling(self,gameState):
+    enemy1 = gameState.getAgentPosition(self.opponent_indexes[0])
+    enemy2 = gameState.getAgentPosition(self.opponent_indexes[1])
+    disappearing_food = self.getDisappearingFoodPos(gameState)
+    return enemy2 or enemy1 or disappearing_food
+  
+  # def find_closest_safe(self,gameState,enemy_pos):
+  #    for pos in self.border:
+  #       if gameState.hasWall(pos) == False:
+        
+     
   def chooseAction(self, gameState):
     """
     Picks among actions randomly.
@@ -120,62 +154,75 @@ class DummyAgent(CaptureAgent):
     '''
     You should change this in your own agent.
     '''
-    #print(self.getFoodYouAreDefending(gameState))
-    # enemy1, enemy2 = gameState.getAgentPosition(self.opponent_indexes[0]),gameState.getAgentPosition(self.opponent_indexes[1])
     action = Directions.STOP
-    #self.enemy_pacman = self.getDisappearingFoodPos(gameState)
-    #if gameStateself.opponent_indexes:
-    # if len(self.enemy_pacman) > 0:
-    #    self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.enemy_pacman.pop(0)], avoidPositions=[], returnPosition=False)
-    #    action = self.currentPath.pop(0)
+    # print('------')
+    # print('avoid',self.avoid)
+    # print('------')
+
     self.agent_pos = gameState.getAgentPosition(self.index)
     enemy1 = gameState.getAgentPosition(self.opponent_indexes[0])
     enemy2 = gameState.getAgentPosition(self.opponent_indexes[1])
-    if enemy1 != None:
-      if enemy1[0] > self.x_N:
-        safe_place =  self.get_safe_place(gameState)
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [safe_place], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
-      else:
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy1], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
+    disappearing_food = self.getDisappearingFoodPos(gameState)
+    #print('patrol pos ', self.patrol_positions)
+    if enemy1 != None and enemy1[0] not in self.safe_zone:
+      print('safe zone stand')
+      self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(self.base_x, enemy1[1])], avoidPositions=self.avoid, returnPosition=False)
+    elif enemy2 != None and enemy2[0] not in self.safe_zone:
+      print('safe zone stand')
+      self.currentPath = self.aStarSearch(self.agent_pos, gameState, [(self.base_x, enemy2[1])], avoidPositions=self.avoid, returnPosition=False)
+    elif enemy1 != None:
+        print('RUSHH')
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy1], avoidPositions=self.avoid, returnPosition=False)
     elif enemy2 != None:
-      if enemy2[0] > self.x_N:
-        safe_place =  self.get_safe_place(gameState)
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [safe_place], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
-      else:
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy2], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
+        print('RUSHH')
+        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [enemy2], avoidPositions=self.avoid, returnPosition=False)
+    elif disappearing_food is not None:
+       print('enemy attack')
+       self.currentPath = self.aStarSearch(self.agent_pos, gameState, [disappearing_food], avoidPositions=self.avoid, returnPosition=False)
     else:
-      if len(self.patrol_positions) > 0:
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
-      else:
-        self.get_patrol_positions(gameState)
-        self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.patrol_positions.pop(0)], avoidPositions=[], returnPosition=False)
-        action = self.currentPath.pop(0)
-  
-    return action
+      if len(self.currentPath) < 1 :
+        print("PATROL MODE ON ")
+        try:
+          if util.manhattanDistance(self.agent_pos,self.capsule_pos[0]) > 5:
+            self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.capsule_pos[0]], avoidPositions=self.avoid, returnPosition=False)
+        except:
+          pass
+        if util.manhattanDistance(self.agent_pos,self.border[0]) < 3:
+          print("NORTH")
+          self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[-1]], avoidPositions=self.avoid, returnPosition=False)
+        elif util.manhattanDistance(self.agent_pos,self.border[-1]) < 3: 
+          print('South')
+          self.currentPath = self.aStarSearch(self.agent_pos, gameState, [self.border[0]], avoidPositions=self.avoid, returnPosition=False)  
+        else:
+          print('GO TO RANDOM POS')
+          try:
+            random_pos = random.choice(self.capsule_pos)
+          except:
+            pass
+          random_pos = random.choice(self.border)
+          self.currentPath = self.aStarSearch(self.agent_pos, gameState, [random_pos], avoidPositions=self.avoid, returnPosition=False)
+    if len(self.currentPath) < 1:
+      return action
+    return self.currentPath.pop(0)
   
   def get_safe_place(self, gameState):
     now = self.grid
-    x_value = len(now[0])//2 - 1
+    x_value = self.base_x
     for y_value in range(0,len(now)):
        if gameState.hasWall(x_value, y_value) == False:
-         return x_value,y_value
+         return (x_value,y_value)
        
 
   def getDisappearingFoodPos(self, gameState):
-    foodPos = []
     if len(self.observationHistory) >2:
       prev = self.getPreviousObservation()
+      prev_food_list = self.getFoodYouAreDefending(prev).asList()
       now = self.getCurrentObservation()
-      for i in range(len(prev)):
-        for j in range(len(prev[0])):
-            if prev[i][j] != self.foodGrid[i][j]:
-              foodPos.append((i,j))
-    return foodPos
+      current_food_list = self.getFoodYouAreDefending(now).asList()
+      for old_food in prev_food_list:
+          if old_food not in current_food_list:
+             return old_food
+    return None
 
 
 
@@ -215,7 +262,7 @@ class DummyAgent(CaptureAgent):
     #         util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
     
     queue = util.PriorityQueueWithFunction(
-      lambda entry: 2 if entry[0] in avoidPositions else 0 + min(
+      lambda entry: entry[2] + width * height if entry[0] in avoidPositions else 0 + min(
           util.manhattanDistance(entry[0], endPosition) for endPosition in goalPositions))
 
     #print(queue,'queueueuueueueueueuueue')
@@ -236,7 +283,7 @@ class DummyAgent(CaptureAgent):
 
         # This shouldn't ever happen...But just in case...
         if len(queue.heap) == 0:
-            return None
+            return []
         else:
             currentPosition, currentPath, currentTotal = queue.pop()
 
